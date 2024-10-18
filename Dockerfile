@@ -1,14 +1,19 @@
-# Usa la imagen base de n8n
-FROM n8nio/n8n:latest
+FROM node:18-alpine
 
-# Instala n8n nodes community (LangChain y otros nodos)
-RUN npm install n8n-nodes-langchain
+ARG N8N_VERSION=1.63.0
 
-# Si tienes otros nodos de la comunidad, instálalos aquí
-# RUN npm install n8n-nodes-<nombre del nodo>
+RUN apk add --update graphicsmagick tzdata
 
-# Expón el puerto de n8n
-EXPOSE 5678
+USER root
 
-# Comando de inicio
-CMD ["n8n"]
+RUN apk --update add --virtual build-dependencies python3 build-base && \
+    npm_config_user=root npm install --location=global n8n@${N8N_VERSION} && \
+    apk del build-dependencies
+
+WORKDIR /data
+
+EXPOSE $PORT
+
+ENV N8N_USER_ID=root
+
+CMD export N8N_PORT=$PORT && n8n start
